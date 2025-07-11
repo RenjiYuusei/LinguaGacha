@@ -7,11 +7,16 @@ class LocalizerZH():
         "请选择应用语言，新的语言设置将在下次启动时生效 …"
         "\n"
         "Select application language, changes will take effect on restart …"
+        "\n"
+        "Vui lòng chọn ngôn ngữ ứng dụng, cài đặt ngôn ngữ mới sẽ có hiệu lực sau khi khởi động lại …"
+
     )
     switch_language_toast: str = (
         "应用语言切换成功，请重启应用生效 …"
         "\n"
         "Language switched successfully, please restart the application for changes to take effect …"
+        "\n"
+        "Chuyển đổi ngôn ngữ thành công, vui lòng khởi động lại ứng dụng để thay đổi có hiệu lực …"
     )
 
     # 通用

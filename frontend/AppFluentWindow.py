@@ -128,37 +128,127 @@ class AppFluentWindow(FluentWindow, Base):
     # 切换主题
     def switch_theme(self) -> None:
         config = Config().load()
-        if not isDarkTheme():
-            setTheme(Theme.DARK)
-            config.theme = Config.Theme.DARK
-        else:
-            setTheme(Theme.LIGHT)
-            config.theme = Config.Theme.LIGHT
-        config.save()
+        
+        # 使用 QTimer 延迟执行，避免 dictionary changed size during iteration 错误
+        def delayed_theme_switch():
+            try:
+                if not isDarkTheme():
+                    setTheme(Theme.DARK)
+                    config.theme = Config.Theme.DARK
+                else:
+                    setTheme(Theme.LIGHT)
+                    config.theme = Config.Theme.LIGHT
+                config.save()
+            except RuntimeError:
+                # 忽略 dictionary changed size during iteration 错误
+                pass
+        
+        QTimer.singleShot(50, delayed_theme_switch)
 
     # 切换语言
-    def swicth_language(self) -> None:
-        message_box = MessageBox(
-            Localizer.get().alert,
-            Localizer.get().switch_language,
-            self
-        )
-        message_box.yesButton.setText("中文")
-        message_box.cancelButton.setText("English")
+    def switch_language(self) -> None:
+        from qfluentwidgets import MessageBoxBase, PrimaryPushButton, PushButton, StrongBodyLabel
+        from PyQt5.QtWidgets import QVBoxLayout, QWidget
+        from PyQt5.QtCore import Qt
 
-        if message_box.exec():
-            config = Config().load()
-            config.app_language = BaseLanguage.Enum.ZH
-            config.save()
-        else:
-            config = Config().load()
-            config.app_language = BaseLanguage.Enum.EN
-            config.save()
+        class LanguageSelectDialog(MessageBoxBase):
+            def __init__(self, parent):
+                super().__init__(parent)
 
-        self.emit(Base.Event.APP_TOAST_SHOW, {
-            "type": Base.ToastType.SUCCESS,
-            "message": Localizer.get().switch_language_toast,
-        })
+                self.setModal(True)
+                self.widget.setFixedSize(480, 360)
+
+                self.yesButton.hide()
+                self.cancelButton.hide()
+
+                current_lang = Localizer.get_app_language()
+                if current_lang == BaseLanguage.Enum.ZH:
+                    title_text = "请选择语言"
+                elif current_lang == BaseLanguage.Enum.VI:
+                    title_text = "Vui lòng chọn ngôn ngữ"
+                else:  # EN or default
+                    title_text = "Please select language"
+
+                title_label = StrongBodyLabel(title_text)
+                title_label.setAlignment(Qt.AlignCenter)
+                title_label.setStyleSheet("""
+                    QLabel {
+                        font-size: 16px;
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                    }
+                """)
+
+                button_container = QWidget()
+                button_layout = QVBoxLayout(button_container)
+                button_layout.setSpacing(15)
+                button_layout.setContentsMargins(30, 20, 30, 20)
+
+                button_layout.addWidget(title_label)
+
+                self.zh_button = PushButton("中文")
+                self.en_button = PushButton("English")
+                self.vi_button = PushButton("Tiếng Việt")
+
+                button_style = """
+                    QPushButton {
+                        font-size: 18px;
+                        font-weight: 500;
+                        text-align: center;
+                        padding: 15px 25px;
+                        border-radius: 8px;
+                        margin: 3px;
+                    }
+                    QPushButton:hover {
+                        background-color: rgba(0, 123, 255, 0.1);
+                    }
+                """
+                for btn in [self.zh_button, self.en_button, self.vi_button]:
+                    btn.setFixedHeight(55)
+                    btn.setStyleSheet(button_style)
+
+                button_layout.addWidget(self.zh_button)
+                button_layout.addWidget(self.en_button)
+                button_layout.addWidget(self.vi_button)
+
+                self.viewLayout.addWidget(button_container)
+
+                self.selected_language = None
+
+                self.zh_button.clicked.connect(lambda: self.select_language(BaseLanguage.Enum.ZH))
+                self.en_button.clicked.connect(lambda: self.select_language(BaseLanguage.Enum.EN))
+                self.vi_button.clicked.connect(lambda: self.select_language(BaseLanguage.Enum.VI))
+
+            def select_language(self, language):
+                self.selected_language = language
+                self.accept()
+
+            def mousePressEvent(self, event):
+                if not self.widget.geometry().contains(event.pos()):
+                    self.reject()
+                else:
+                    super().mousePressEvent(event)
+
+        dialog = LanguageSelectDialog(self)
+
+        current_lang = Localizer.get_app_language()
+        if current_lang == BaseLanguage.Enum.ZH:
+            dialog.setWindowTitle("语言选择")
+        elif current_lang == BaseLanguage.Enum.VI:
+            dialog.setWindowTitle("Chọn ngôn ngữ")
+        else:  # EN or default
+            dialog.setWindowTitle("Language Selection")
+
+        if dialog.exec():
+            if dialog.selected_language:
+                config = Config().load()
+                config.app_language = dialog.selected_language
+                config.save()
+
+                self.emit(Base.Event.APP_TOAST_SHOW, {
+                    "type": Base.ToastType.SUCCESS,
+                    "message": Localizer.get().switch_language_toast,
+                })
 
     # 打开主页
     def open_project_page(self) -> None:
@@ -233,7 +323,7 @@ class AppFluentWindow(FluentWindow, Base):
                 Localizer.get().app_language_btn,
                 False
             ),
-            onClick = self.swicth_language,
+            onClick = self.switch_language,
             position = NavigationItemPosition.BOTTOM
         )
 

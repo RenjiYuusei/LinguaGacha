@@ -3,6 +3,7 @@ from enum import StrEnum
 class BaseLanguage():
 
     class Enum(StrEnum):
+        AUTO = "AUTO"                                      # 自动检测 (Auto detect)
         ZH = "ZH"                                          # 中文 (Chinese)
         EN = "EN"                                          # 英文 (English)
         JA = "JA"                                          # 日文 (Japanese)
@@ -22,6 +23,7 @@ class BaseLanguage():
         VI = "VI"                                          # 越南文 (Vietnamese)
 
     LANGUAGE_NAMES: dict[Enum, dict[str, str]] = {
+        Enum.AUTO: {"zh": "自动检测", "en": "Auto Detect"},
         Enum.ZH: {"zh": "中文", "en": "Chinese"},
         Enum.EN: {"zh": "英文", "en": "English"},
         Enum.JA: {"zh": "日文", "en": "Japanese"},
@@ -47,7 +49,7 @@ class BaseLanguage():
 
     @classmethod
     def get_name_zh(cls, language: Enum) -> str:
-        return cls.LANGUAGE_NAMES.get(language, {}).get("zh" "")
+        return cls.LANGUAGE_NAMES.get(language, {}).get("zh", "")
 
     @classmethod
     def get_name_en(cls, language: Enum) -> str:
@@ -55,4 +57,5 @@ class BaseLanguage():
 
     @classmethod
     def get_languages(cls) -> list[str]:
-        return list(cls.LANGUAGE_NAMES.keys())
+        # Return all languages except AUTO (AUTO is handled separately in UI)
+        return [lang for lang in cls.LANGUAGE_NAMES.keys() if lang != cls.Enum.AUTO]

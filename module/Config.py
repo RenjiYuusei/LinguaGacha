@@ -51,7 +51,7 @@ class Config():
     result_checker_retry_count_threshold: bool = False
 
     # ProjectPage
-    source_language: BaseLanguage.Enum = BaseLanguage.Enum.JA
+    source_language: BaseLanguage.Enum = BaseLanguage.Enum.AUTO
     target_language: BaseLanguage.Enum = BaseLanguage.Enum.ZH
     input_folder: str = "./input"
     output_folder: str = "./output"

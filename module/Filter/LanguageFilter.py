@@ -4,6 +4,10 @@ from module.Text.TextHelper import TextHelper
 class LanguageFilter():
 
     def filter(src: str, source_language: BaseLanguage.Enum) -> bool:
+        # 如果源语言设置为 AUTO，则跳过语言过滤
+        if source_language == BaseLanguage.Enum.AUTO:
+            return False
+        
         # 获取语言判断函数
         if source_language == BaseLanguage.Enum.ZH:
             func = TextHelper.CJK.any

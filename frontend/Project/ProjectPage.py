@@ -51,21 +51,28 @@ class ProjectPage(QWidget, Base):
     # 原文语言
     def add_widget_source_language(self, parent: QLayout, config: Config, windows: FluentWindow) -> None:
         def init(widget: ComboBoxCard) -> None:
-            if config.source_language in BaseLanguage.get_languages():
+            if config.source_language == BaseLanguage.Enum.AUTO:
+                widget.get_combo_box().setCurrentIndex(0)
+            elif config.source_language in BaseLanguage.get_languages():
                 widget.get_combo_box().setCurrentIndex(
-                    BaseLanguage.get_languages().index(config.source_language)
+                    BaseLanguage.get_languages().index(config.source_language) + 1
                 )
 
         def current_changed(widget: ComboBoxCard) -> None:
             config = Config().load()
-            config.source_language = BaseLanguage.get_languages()[widget.get_combo_box().currentIndex()]
+            selected_index = widget.get_combo_box().currentIndex()
+            
+            if selected_index == 0:
+                config.source_language = BaseLanguage.Enum.AUTO
+            else:
+                config.source_language = BaseLanguage.get_languages()[selected_index - 1]
             config.save()
 
         parent.addWidget(
             ComboBoxCard(
                 Localizer.get().project_page_source_language_title,
                 Localizer.get().project_page_source_language_content,
-                items = self.languages,
+                items = [Localizer.get().auto] + self.languages,
                 init = init,
                 current_changed = current_changed,
             )
